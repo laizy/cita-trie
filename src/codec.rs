@@ -3,9 +3,7 @@ use std::hash;
 
 use crate::errors::RLPCodecError;
 use rlp::{Prototype, Rlp, RlpStream};
-use sha3::{Digest, Sha3_256};
 use tiny_keccak;
-use tiny_keccak::Keccak;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum DataType<'a> {
