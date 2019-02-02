@@ -9,8 +9,8 @@ edition = "2018"
 [dependencies]
 failure = "0.1.5"
 bytes = "0.4.11"
-sha3 = "0.8.0"
 rlp = "0.3.0"
+tiny-keccak = "*"
 
 [dev-dependencies]
 rand = "0.6.3"

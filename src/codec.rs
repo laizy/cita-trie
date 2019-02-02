@@ -1,10 +1,11 @@
 use std::fmt::Debug;
 use std::hash;
 
+use crate::errors::RLPCodecError;
 use rlp::{Prototype, Rlp, RlpStream};
 use sha3::{Digest, Sha3_256};
-
-use crate::errors::RLPCodecError;
+use tiny_keccak;
+use tiny_keccak::Keccak;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum DataType<'a> {
@@ -92,7 +93,7 @@ impl NodeCodec for RLPNodeCodec {
         if is_hash {
             out.copy_from_slice(data);
         } else {
-            out.copy_from_slice(&Sha3_256::digest(data));
+            out.copy_from_slice(&tiny_keccak::keccak256(data)[..]);
         }
         out
     }
