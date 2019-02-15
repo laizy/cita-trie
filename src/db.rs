@@ -10,7 +10,7 @@ pub trait DB: Send + Sync + Debug {
 
     fn get(&mut self, key: &[u8]) -> Result<Option<Vec<u8>>, Self::Error>;
     fn insert(&mut self, key: &[u8], value: &[u8]) -> Result<(), Self::Error>;
-    fn contains(&self, key: &[u8]) -> Result<bool, Self::Error>;
+    fn contains(&mut self, key: &[u8]) -> Result<bool, Self::Error>;
     fn remove(&mut self, key: &[u8]) -> Result<(), Self::Error>;
 }
 
@@ -46,7 +46,7 @@ impl DB for MemoryDB {
         Ok(())
     }
 
-    fn contains(&self, key: &[u8]) -> Result<bool, Self::Error> {
+    fn contains(&mut self, key: &[u8]) -> Result<bool, Self::Error> {
         Ok(self.storage.read().unwrap().contains_key(key))
     }
 
