@@ -8,7 +8,7 @@ use crate::errors::MemDBError;
 pub trait DB: Send + Sync + Debug {
     type Error: Error;
 
-    fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>, Self::Error>;
+    fn get(&mut self, key: &[u8]) -> Result<Option<Vec<u8>>, Self::Error>;
     fn insert(&mut self, key: &[u8], value: &[u8]) -> Result<(), Self::Error>;
     fn contains(&self, key: &[u8]) -> Result<bool, Self::Error>;
     fn remove(&mut self, key: &[u8]) -> Result<(), Self::Error>;
@@ -30,7 +30,7 @@ impl MemoryDB {
 impl DB for MemoryDB {
     type Error = MemDBError;
 
-    fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>, Self::Error> {
+    fn get(&mut self, key: &[u8]) -> Result<Option<Vec<u8>>, Self::Error> {
         if let Some(value) = self.storage.read().unwrap().get(key) {
             Ok(Some(value.clone()))
         } else {

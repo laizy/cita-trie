@@ -10,10 +10,10 @@ pub type TrieResult<T, C, D> = Result<T, TrieError<C, D>>;
 
 pub trait Trie<C: NodeCodec, D: DB> {
     /// returns the value for key stored in the trie.
-    fn get(&self, key: &[u8]) -> TrieResult<Option<Vec<u8>>, C, D>;
+    fn get(&mut self, key: &[u8]) -> TrieResult<Option<Vec<u8>>, C, D>;
 
     /// check that the key is present in the trie
-    fn contains(&self, key: &[u8]) -> TrieResult<bool, C, D>;
+    fn contains(&mut self, key: &[u8]) -> TrieResult<bool, C, D>;
 
     /// inserts value into trie and modifies it if it exists
     fn insert(&mut self, key: &[u8], value: &[u8]) -> TrieResult<(), C, D>;
@@ -45,13 +45,13 @@ where
     C: NodeCodec,
     D: DB,
 {
-    fn get(&self, key: &[u8]) -> TrieResult<Option<Vec<u8>>, C, D> {
-        self.get_at(&self.root, &Nibbles::from_raw(key, true))
+    fn get(&mut self, key: &[u8]) -> TrieResult<Option<Vec<u8>>, C, D> {
+        self.get_at(&self.root.clone(), &Nibbles::from_raw(key, true))
     }
 
-    fn contains(&self, key: &[u8]) -> TrieResult<bool, C, D> {
+    fn contains(&mut self, key: &[u8]) -> TrieResult<bool, C, D> {
         Ok(self
-            .get_at(&self.root, &Nibbles::from_raw(key, true))?
+            .get_at(&self.root.clone(), &Nibbles::from_raw(key, true))?
             .map_or(false, |_| true))
     }
 
@@ -107,7 +107,7 @@ where
         }
     }
 
-    fn get_at<'a>(&self, n: &'a Node, partial: &Nibbles) -> TrieResult<Option<Vec<u8>>, C, D> {
+    fn get_at<'a>(&mut self, n: &'a Node, partial: &Nibbles) -> TrieResult<Option<Vec<u8>>, C, D> {
         match n {
             Node::Empty => Ok(None),
             Node::Leaf(ref leaf) => {
@@ -191,8 +191,8 @@ where
                 }
             }
             Node::Hash(hash) => {
-                let (new_n, deleted) =
-                    self.delete_at(self.get_node_from_hash(hash.get_hash())?, partial)?;
+                let node = self.get_node_from_hash(hash.get_hash())?;
+                let (new_n, deleted) = self.delete_at(node, partial)?;
                 if deleted {
                     self.deleted_keys
                         .push(self.codec.decode_hash(hash.get_hash(), true));
@@ -385,7 +385,7 @@ where
         }
     }
 
-    fn get_node_from_hash(&self, hash: &[u8]) -> TrieResult<Node, C, D> {
+    fn get_node_from_hash(&mut self, hash: &[u8]) -> TrieResult<Node, C, D> {
         match self.db.get(hash).map_err(TrieError::DB)? {
             Some(data) => self.decode_node(&data).map_err(TrieError::NodeCodec),
             None => Ok(Node::Empty),
